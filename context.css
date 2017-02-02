@@ -4,8 +4,8 @@
 
 .usercontext .tooltiptext {
     visibility: hidden;
-    width: 120px;
-    background-color: black;
+    width: 300px;
+    background-color: white;
     color: #fff;
     text-align: center;
     border-radius: 6px;
