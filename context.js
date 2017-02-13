@@ -1,6 +1,19 @@
 $( document ).ready(function() {
     console.log("Page Loaded");
 
+    // User set extension options:
+    var chartDisplayStyle,
+        accessibilityColors;
+
+    function checkForUserPreferences (){
+      chrome.storage.sync.get(null, function (data) { 
+        chartDisplayStyle = data.chartChoice ? data.chartChoice : "doughnut"
+        accessibilityColors = data.accessibleChoice ? JSON.parse(data.accessibleChoice) : false
+      });
+
+      attachEventListenersToUsers();
+    };
+
     function attachEventListenersToUsers() {
       $("[data-author] .tagline").each( function(index, currentUserTagline){
         var currentUsername = currentUserTagline.getElementsByClassName("author")[0];
@@ -48,18 +61,6 @@ $( document ).ready(function() {
               overviewData = overview.data.children;
             }
           })
-
-        // $.get("https://www.reddit.com/user/" + username + "/upvoted.json?limit=10", function(upvoted, status){
-        //     if(status === "success") {
-        //       upvotedData = upvoted.data.children;
-        //     }
-        //   }),
-
-        // $.get("https://www.reddit.com/user/" + username + "/saved.json?limit=10", function(saved, status){
-        //     if(status === "success") {
-        //       savedData = saved.data.children;
-        //     }
-        //   })
       ).then( function(){
         var chartArea = document.createElement("canvas");
         // make sure userNeedsData is set to true so the information isn't loaded again on hover
@@ -71,7 +72,7 @@ $( document ).ready(function() {
         var chartUserData = parseUserDataForSubreddits(overviewData.concat(upvotedData, savedData));
 
         var subbredditChart = new Chart(chartArea, {
-          type: 'doughnut',
+          type: chartDisplayStyle,
           data: {
               labels: chartUserData[0],
               datasets: [
@@ -145,6 +146,5 @@ $( document ).ready(function() {
       return false;
     }
 
-
-    attachEventListenersToUsers();
+    checkForUserPreferences();
 });
