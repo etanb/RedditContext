@@ -62,48 +62,157 @@ $( document ).ready(function() {
             }
           })
       ).then( function(){
-        var chartArea = document.createElement("canvas");
         // make sure userNeedsData is set to true so the information isn't loaded again on hover
         userNeedsData.dataLoadedTrue()
 
-        chartArea.width = "300";
-        chartArea.height = "300";
+        if (chartDisplayStyle != "cloud") {
+          var chartArea = document.createElement("canvas"),
+              chartUserData = parseUserDataForSubreddits(overviewData.concat(upvotedData, savedData), false),
+              chartData,
+              subbredditChart;
 
-        var chartUserData = parseUserDataForSubreddits(overviewData.concat(upvotedData, savedData));
+          chartArea.width = "300";
+          chartArea.height = "300";
 
-        var subbredditChart = new Chart(chartArea, {
-          type: chartDisplayStyle,
-          data: {
-              labels: chartUserData[0],
-              datasets: [
-                  {
-                      data: chartUserData[1],
-                      backgroundColor: [
-                    "#F9C80E",
-                    "#F86624",
-                    "#EA3546",
-                    "#662E9B",
-                    "#43BCCD",
-                    "#3D315B",
-                    "#444B6E",
-                    "#708B75",
-                    "#9AB87A",
-                    "#F8F991"
+          
 
+          if (chartDisplayStyle === "bar") {
+            chartData = {
+                labels: chartUserData[0],
+                datasets: [
+                    {
+                        label: "Subreddit Activity for: " + username,
+                        data: chartUserData[1],
+                        backgroundColor: [
+                      "#F9C80E",
+                      "#F86624",
+                      "#EA3546",
+                      "#662E9B",
+                      "#43BCCD",
+                      "#3D315B",
+                      "#444B6E",
+                      "#708B75",
+                      "#9AB87A",
+                      "#F8F991"
+
+                  ],
+                      borderWidth: 2
+                    }
                 ]
-                  }
-              ]
-            },
-          options: { responsive: false }
-        })
+              }
 
+              subbredditChart = new Chart(chartArea, {
+                type: chartDisplayStyle,
+                data: chartData,
+                options: { 
+                  responsive: false,
+                  scales: {
+                          yAxes: [{
+                              display: true,
+                              ticks: {
+                                  beginAtZero: true,
+                                  stepSize: 1
+                              }
+                          }]
+                      }
+                }
+              })
+            } else {
+              chartData = {
+                  labels: chartUserData[0],
+                  datasets: [
+                      {
+                          data: chartUserData[1],
+                          backgroundColor: [
+                        "#F9C80E",
+                        "#F86624",
+                        "#EA3546",
+                        "#662E9B",
+                        "#43BCCD",
+                        "#3D315B",
+                        "#444B6E",
+                        "#708B75",
+                        "#9AB87A",
+                        "#F8F991"
+
+                    ]
+                      }
+                  ]
+                }
+
+                subbredditChart = new Chart(chartArea, {
+                  type: chartDisplayStyle,
+                  data: chartData,
+                  options: { 
+                    responsive: false
+                  }
+                })
+            }
+
+        } else {
+          var chartArea = document.createElement("div"),
+              chartUserData = parseUserDataForSubreddits(overviewData.concat(upvotedData, savedData), true)
+
+          $(chartArea).jQCloud(chartUserData, {
+            width: 400,
+            height: 300
+          });
+        } 
+
+        var redditActivityScore = checkForRedditUsage(overviewData.concat(upvotedData, savedData)),
+            activityArea = document.createElement("span");
+            activityArea.innerHTML = "This user is this active: " + redditActivityScore
+        
         userContext.appendChild(chartArea)
+        userContext.appendChild(activityArea);
         contentBox.appendChild(userContext);
+        
+
         currentUserTagline.appendChild(contentBox);
       })
     }
 
-    function parseUserDataForSubreddits(userData) {
+    function checkForRedditUsage(userData) {
+      var redditFrequencyScore = 0;
+
+      userData.forEach( function(item) {
+        var itemCreationUTC = item.data.created_utc,
+            newDateObj = new Date(0),
+            timeDifference;
+
+        newDateObj.setUTCSeconds(itemCreationUTC);
+
+        timeDifference = (new Date - newDateObj) / 1000 / 60 / 60;
+
+        switch(true) {
+          case (timeDifference < 24): // within one day
+            redditFrequencyScore += 3;
+            break;
+          case (timeDifference < 48): // within two days
+            redditFrequencyScore += 2.5;
+            break;
+          case (timeDifference < 72): // within three days
+            redditFrequencyScore += 2.25;
+            break;
+          case (timeDifference < 168): // within one week
+            redditFrequencyScore += 1.5;
+            break;
+          case (timeDifference < 336): // within two weeks
+            redditFrequencyScore += 1.25;
+            break;
+          case (timeDifference < 504): // within three weeks
+            redditFrequencyScore += 1.125;
+            break;
+          default: 
+            redditFrequencyScore += 1;
+        }
+
+      })
+      
+      return redditFrequencyScore / userData.length;
+    }
+
+    function parseUserDataForSubreddits(userData, forWordCloud) {
       var userActiveSubreddit = [],
           currentSubreddit,
           activeSubredditString = "";
@@ -117,7 +226,18 @@ $( document ).ready(function() {
       }
 
       userActiveSubreddit.sort(function(a, b){return a[1] < b[1]})
-      if(userActiveSubreddit.length) {
+      if (forWordCloud && userActiveSubreddit.length) {
+        var userWordCloud = [];
+
+        userActiveSubreddit.forEach( function (item) {
+          userWordCloud.push({
+            text: item[0],
+            weight: item[1]
+          })
+        })
+
+        return userWordCloud;
+      } else if (userActiveSubreddit.length) {
         var userSubreddit = [],
             userCount = [];
         // userActiveSubreddit.forEach( function(item){

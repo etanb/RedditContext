@@ -1,7 +1,7 @@
 {
   "content_scripts": [ {
-      "css": [ "context.css" ],
-      "js": [ "jquery.min.js", "chart.min.js", "context.js" ],
+      "css": [ "jqcloud.min.css", "context.css" ],
+      "js": [ "jquery.min.js", "chart.min.js", "jqcloud.min.js", "context.js" ],
       "matches": [ "*://*.reddit.com/r/*/comments/*" ],
       "run_at": "document_start"
    } ],
