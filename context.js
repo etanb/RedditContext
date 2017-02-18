@@ -161,7 +161,25 @@ $( document ).ready(function() {
 
         var redditActivityScore = checkForRedditUsage(overviewData.concat(upvotedData, savedData)),
             activityArea = document.createElement("span");
-            activityArea.innerHTML = "This user is this active: " + redditActivityScore
+
+        switch(true) {
+          case (redditActivityScore > 2.5):
+            activityArea.innerHTML = "This user is a heavily active Reddit user.";
+            activityArea.className = "heavily-active";
+            break;
+          case (redditActivityScore > 1.5):
+            activityArea.innerHTML = "This user is a frequently active Reddit user.";
+            activityArea.className = "frequent-active ";
+            break;
+          case (redditActivityScore > 1):
+            activityArea.innerHTML = "This user is an infrequently active Reddit user.";
+            activityArea.className = "infrequent-active ";
+            break;
+          default:
+            activityArea.innerHTML = "This user is rarely active on Reddit.";
+            activityArea.className = "rare-active";
+            break;
+        }
         
         userContext.appendChild(chartArea)
         userContext.appendChild(activityArea);
